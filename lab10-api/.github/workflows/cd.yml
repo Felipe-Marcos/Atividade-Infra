@@ -1,0 +1,28 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+env:
+  IMAGE_NAME: lab10-api-${{ vars.RA }}
+
+jobs:
+  deploy:
+    name: Deploy na EC2
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: self-hosted
+    steps:
+      - name: Baixar imagem nova
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+      - name: Parar e remover container atual
+        run: |
+          docker stop lab10-api || true
+          docker rm lab10-api || true
+      - name: Subir container novo
+        run: |
+          docker run -d --name lab10-api --restart unless-stopped -p 8080:8080 \
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+      - run: docker ps
