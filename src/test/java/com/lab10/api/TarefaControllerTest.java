@@ -40,9 +40,14 @@ class TarefaControllerTest {
     }
 
     @Test
-    void listaInicialVazia() throws Exception {
+    void listaContemTarefaCriada() throws Exception {
+        mvc.perform(post("/api/tarefas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Tarefa da lista\",\"concluida\":false}"))
+                .andExpect(status().isCreated());
+
         mvc.perform(get("/api/tarefas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$[?(@.titulo=='Tarefa da lista')]").exists());
     }
 }
